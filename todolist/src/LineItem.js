@@ -19,6 +19,7 @@ const LineItem = ({ item, handleCheck, handleDelete }) => {
         role="button"
         onClick={() => handleDelete(item.id)}
         tabIndex="0"
+        aria-label={`Delete ${item.item}`}
       />
     </li>
   );

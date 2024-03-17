@@ -8,6 +8,7 @@ import AddItem from "./AddItem";
 import SearchItem from "./SearchItem";
 
 function App() {
+  const API_URL = "http://localhost:3500/items";
   const [items, setItems] = useState(
   //   [
   //   { id: 1`, checked: true, item: "Practice Coding" },
@@ -19,13 +20,38 @@ function App() {
 
   const [newItem,setNewItem] = useState("");
   const [search,setSearch] = useState("");
+  const [fetchError,setFetchError] = useState(null);
+  const [isLoading,setIsLoading] = useState(true);
 
   // console.log("before useEffect")
 
   useEffect(() => {
     // console.log("inside")
-    JSON.parse(localStorage.getItem("todo_list"))
-    
+    // JSON.parse(localStorage.getItem("todo_list"))
+    const fetchItems = async () => {
+      try{
+        const response = await fetch(API_URL);
+        if(!response.ok) throw Error("Data not received")
+        console.log(response);
+        const listItems = await response.json();
+        console.log(listItems);
+        setItems(listItems);
+        setFetchError(null);
+      }catch(err)
+      {
+        console.log(err.stack);
+        setFetchError(err.message);
+      }finally
+      {
+        setIsLoading(false);
+      }
+    }
+      setTimeout(() => {
+
+        (async () => await fetchItems())();
+        
+      },2000)
+
   },[])
   
   // console.log("after useEffect")
@@ -35,7 +61,7 @@ function App() {
     const addNewItem = {id,checked:false,item}
     const listItems = [...items,addNewItem];
     setItems(listItems);
-    localStorage.setItem("todo_list", JSON.stringify(listItems));
+    // localStorage.setItem("todo_list", JSON.stringify(listItems));
     }
 
   const handleCheck = (id) => {
@@ -43,13 +69,13 @@ function App() {
       item.id === id ? { ...item, checked: !item.checked } : item
     );
     setItems(listItems);
-    localStorage.setItem("todo_list", JSON.stringify(listItems));
+    // localStorage.setItem("todo_list", JSON.stringify(listItems));
   };
 
   const handleDelete = (id) => {
     const listItems = items.filter((item) => item.id !== id);
     setItems(listItems);
-    localStorage.setItem("todo_list", JSON.stringify(listItems));
+    // localStorage.setItem("todo_list", JSON.stringify(listItems));
   };
 
   const handleSubmit = (e) =>{
@@ -73,11 +99,15 @@ function App() {
       search={search}
       setSearch={setSearch}
       />
-      <Content
-        items={items.filter((item) => ((item.item).toLowerCase()).includes(search.toLowerCase()))}
-        handleCheck={handleCheck}
-        handleDelete={handleDelete}
-      />
+      <main>
+        {isLoading && <p>Loading Items...</p>}
+        {fetchError && <p style={{ color: "red" }}>{`Error: ${fetchError}`}</p>}
+        {!isLoading && !fetchError && <Content
+          items={items.filter((item) => ((item.item).toLowerCase()).includes(search.toLowerCase()))}
+          handleCheck={handleCheck}
+          handleDelete={handleDelete}
+        />}
+      </main>
       <Footer length={items.length} />
     </div>
   );
